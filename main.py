@@ -13,8 +13,15 @@ def main():
     tracks=tracker.get_object_tracks(video_frames,
                                      read_from_snub=True,
                                      stub_path="C:/Users/Vansh/OneDrive/Desktop/football_analysis/stubs/tracks.pkl")
-                                     
-    save_video(video_frames, "C:/Users/Vansh/OneDrive/Desktop/football_analysis/output_videos/output.mp4")
+    #draw object track
+    output_video_frames= tracker.draw_annotations(video_frames,tracks)
+
+
+
+
+
+
+    save_video(output_video_frames, "C:/Users/Vansh/OneDrive/Desktop/football_analysis/output_videos/output.mp4")
 
 
 if __name__=="__main__":
