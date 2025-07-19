@@ -5,6 +5,7 @@ import os
 import cv2
 import sys
 import os
+import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from utils import get_center_of_bbox, get_bbox_width
@@ -148,6 +149,21 @@ class Tracker:
                 2
             )
         return frame
+    
+    def draw_traingle(self,frame,bbox,color):
+        y= int(bbox[1])
+        x,_ = get_center_of_bbox(bbox)
+
+        triangle_points = np.array([
+    [x, y],
+    [x - 10, y - 20],
+    [x + 10, y - 20],
+], dtype=np.int32)
+
+        cv2.drawContours(frame, [triangle_points],0,color, cv2.FILLED)
+        cv2.drawContours(frame, [triangle_points],0,(0,0,0), 2)
+
+        return frame
 
 
 
@@ -170,6 +186,11 @@ class Tracker:
             for track_id, referee in referee_dict.items():
                 color = (0,255, 255)
                 frame = self.draw_ellipse(frame, referee, color, track_id)
+
+            #draw ball
+            for track_id, ball in ball_dict.items():
+                color=(0,55,25)
+                frame = self.draw_traingle(frame, ball, color)
 
             output_video_frames.append(frame)
 
