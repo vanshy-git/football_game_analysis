@@ -6,6 +6,7 @@ import cv2
 import sys
 import os
 import numpy as np
+import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from utils import get_center_of_bbox, get_bbox_width
@@ -15,6 +16,24 @@ class Tracker:
     def __init__(self, model_path):
         self.model = YOLO(model_path) 
         self.tracker = sv.ByteTrack()
+
+    def interpolate_ball_positions(self, ball_positions):
+        ball_positions = [x.get(1, {}).get('bbox', []) for x in ball_positions]
+
+        # If no valid bbox found, skip interpolation
+        if not any(ball_positions):  
+            print("No ball positions detected — skipping interpolation.")
+            return ball_positions
+
+        df_ball_positions = pd.DataFrame(ball_positions, columns=['x1', 'y1', 'x2', 'y2'])
+
+        # Interpolate missing values
+        df_ball_positions = df_ball_positions.interpolate()
+        df_ball_positions = df_ball_positions.bfill()
+
+        ball_positions = [{1: {"bbox": x}} for x in df_ball_positions.to_numpy().tolist()]
+        return ball_positions
+
 
     def detect_frames(self, frames):
         batch_size=20 
@@ -161,7 +180,7 @@ class Tracker:
 ], dtype=np.int32)
 
         cv2.drawContours(frame, [triangle_points],0,color, cv2.FILLED)
-        cv2.drawContours(frame, [triangle_points],0,(0,0,0), 2)
+        cv2.drawContours(frame, [triangle_points],0,(255,0,0), 2)
 
         return frame
 
@@ -189,7 +208,7 @@ class Tracker:
 
             #draw ball
             for track_id, ball in ball_dict.items():
-                color=(0,55,25)
+                color=(255,55,25)
                 frame = self.draw_traingle(frame, ball, color)
 
             output_video_frames.append(frame)

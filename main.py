@@ -8,6 +8,7 @@ from team_assigner import TeamAssigner
 
 
 
+
 def main():
     video_frames = read_video("C:/Users/Vansh/OneDrive/Desktop/football_analysis/input_videos/08fd33_4.mp4")
 
@@ -15,6 +16,8 @@ def main():
     tracks=tracker.get_object_tracks(video_frames,
                                      read_from_snub=True,
                                      stub_path="C:/Users/Vansh/OneDrive/Desktop/football_analysis/stubs/tracks.pkl")
+    
+    tracks["ball"] = tracker.interpolate_ball_positions(tracks["ball"])
     
 
     team_assigner = TeamAssigner()
