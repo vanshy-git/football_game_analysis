@@ -1,27 +1,24 @@
+import pandas as pd
+
+
 def get_center_of_bbox(bbox):
-    """
-    Calculate the center of a bounding box.
-    
-    Args:
-        bbox (list or tuple): Bounding box in the format [x1, y1, x2, y2].
-        
-    Returns:
-        tuple: Center coordinates (cx, cy).
-    """
+    if not bbox or len(bbox) != 4 or any(pd.isna(bbox)):
+        return None  # Ball position unknown
+
     x1, y1, x2, y2 = bbox
-    cx = int(x1 + x2) / 2
-    cy = int(y1 + y2) / 2
-    return cx, cy
+    cx = (x1 + x2) / 2
+    cy = (y1 + y2) / 2
+    return (cx, cy)
 
 def get_bbox_width(bbox):
-    """
-    Calculate the width of a bounding box.
-    
-    Args:
-        bbox (list or tuple): Bounding box in the format [x1, y1, x2, y2].
-        
-    Returns:
-        int: Width of the bounding box.
-    """
+
     x1, _, x2, _ = bbox
     return int(x2 - x1)
+
+
+def measure_distance(p1, p2):
+    
+
+    if p1 is None or p2 is None:
+        return float('inf')  # Impossible distance if missing
+    return ((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)**0.5

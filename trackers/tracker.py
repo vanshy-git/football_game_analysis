@@ -18,21 +18,19 @@ class Tracker:
         self.tracker = sv.ByteTrack()
 
     def interpolate_ball_positions(self, ball_positions):
-        ball_positions = [x.get(1, {}).get('bbox', []) for x in ball_positions]
+    # Always keep one entry per frame
+            ball_positions = [x.get(1, {}).get('bbox', [np.nan, np.nan, np.nan, np.nan]) 
+                            for x in ball_positions]
 
-        # If no valid bbox found, skip interpolation
-        if not any(ball_positions):  
-            print("No ball positions detected — skipping interpolation.")
+            df_ball_positions = pd.DataFrame(ball_positions, columns=['x1', 'y1', 'x2', 'y2'])
+
+            # Interpolate missing values
+            df_ball_positions = df_ball_positions.interpolate()
+            df_ball_positions = df_ball_positions.bfill()
+
+            ball_positions = [{1: {"bbox": x}} for x in df_ball_positions.to_numpy().tolist()]
             return ball_positions
 
-        df_ball_positions = pd.DataFrame(ball_positions, columns=['x1', 'y1', 'x2', 'y2'])
-
-        # Interpolate missing values
-        df_ball_positions = df_ball_positions.interpolate()
-        df_ball_positions = df_ball_positions.bfill()
-
-        ball_positions = [{1: {"bbox": x}} for x in df_ball_positions.to_numpy().tolist()]
-        return ball_positions
 
 
     def detect_frames(self, frames):
@@ -174,10 +172,10 @@ class Tracker:
         x,_ = get_center_of_bbox(bbox)
 
         triangle_points = np.array([
-    [x, y],
-    [x - 10, y - 20],
-    [x + 10, y - 20],
-], dtype=np.int32)
+         [x, y],
+         [x - 10, y - 20],
+         [x + 10, y - 20],
+        ], dtype=np.int32)
 
         cv2.drawContours(frame, [triangle_points],0,color, cv2.FILLED)
         cv2.drawContours(frame, [triangle_points],0,(255,0,0), 2)
@@ -189,28 +187,31 @@ class Tracker:
 
 
     def draw_annotations(self,video_frames, tracks):
-        output_video_frames= []
-        for frame_num, frame in enumerate(video_frames):
-            frame = frame.copy()
+            output_video_frames= []
+            for frame_num, frame in enumerate(video_frames):
+                frame = frame.copy()
 
-            player_dict = tracks["players"][frame_num]
-            ball_dict = tracks["ball"][frame_num]
-            referee_dict = tracks["referees"][frame_num]
+                player_dict = tracks["players"][frame_num]
+                ball_dict = tracks["ball"][frame_num]
+                referee_dict = tracks["referees"][frame_num]
 
-            # Draw Players
-            for track_id, player in player_dict.items():
-                color = (255, 0, 255)
-                frame = self.draw_ellipse(frame, player, color, track_id)
-            #draw referee
-            for track_id, referee in referee_dict.items():
-                color = (0,255, 255)
-                frame = self.draw_ellipse(frame, referee, color, track_id)
+                # Draw Players
+                for track_id, player in player_dict.items():
+                    # color = player.get("team_color",(0,0,255))
+                    frame = self.draw_ellipse(frame, player,(255,255,25), track_id)
 
-            #draw ball
-            for track_id, ball in ball_dict.items():
-                color=(255,55,25)
-                frame = self.draw_traingle(frame, ball, color)
+                    if player.get('has_ball',False):
+                        frame = self.draw_traingle(frame, player["bbox"],(0,0,255))
 
-            output_video_frames.append(frame)
+                # Draw Referee
+                for _, referee in referee_dict.items():
+                    frame = self.draw_ellipse(frame, referee["bbox"],(0,255,255))
+                
+                # Draw ball 
+                for track_id, ball in ball_dict.items():
+                    frame = self.draw_traingle(frame, ball["bbox"],(0,255,0))
 
-        return output_video_frames    
+
+               
+
+            return output_video_frames
