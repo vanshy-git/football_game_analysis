@@ -13,7 +13,7 @@ class PlayerBallAssigner():
         assigned_player=-1
 
         for player_id, player in players.items():
-            player_bbox = player
+            player_bbox = player['bbox']
 
             distance_left = measure_distance((player_bbox[0],player_bbox[-1]),ball_position)
             distance_right = measure_distance((player_bbox[2],player_bbox[-1]),ball_position)
