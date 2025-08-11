@@ -1,6 +1,7 @@
 from utils import read_video, save_video
 from trackers.tracker import Tracker
 import cv2
+from team_assigner import TeamAssigner
 
 
 
@@ -15,6 +16,20 @@ def main():
                                      read_from_snub=True,
                                      stub_path="C:/Users/Vansh/OneDrive/Desktop/football_analysis/stubs/tracks.pkl")
     
+
+    team_assigner = TeamAssigner()
+    team_assigner.assign_team_color(video_frames[0], 
+                                    tracks['players'][0])
+    
+    for frame_num, player_track in enumerate(tracks['players']):
+        for player_id, track in player_track.items():
+            team_assigner.team_colors[team_assigner.get_player_team(video_frames[frame_num],   
+                                                 track,
+                                                 player_id)]
+            
+            
+
+
     for track_id, player in tracks['players'][0].items():
          bbox = player
          frame =video_frames[0]
